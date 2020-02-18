@@ -145,6 +145,26 @@ def get_chart_map_data():
     return map_chart_list
 
 
+def get_chart_city_map_data():
+    city_map_dict = {}
+    map_data = json.loads(rd.get('trend'))
+    city_data = map_data['data']['areaTree'][0]
+    special = ['北京', '天津', '上海', '重庆', '香港', '澳门']
+    for data in city_data['children']:
+        city_list = []
+        if data['name'] in special:
+            for inner_data in data['children']:
+                if '区' in inner_data['name']:
+                    city_list.append({'name': inner_data['name'], 'value': inner_data['total']['confirm']})
+                else:
+                    city_list.append({'name': inner_data['name'] + '区', 'value': inner_data['total']['confirm']})
+        else:
+            for inner_data in data['children']:
+                city_list.append({'name': inner_data['name'], 'value': inner_data['total']['confirm']})
+        city_map_dict[data['name']] = city_list
+    return city_map_dict
+
+
 @app.route('/get_ncov_totalcount')
 def ncov_totalcount():
     ncov_data = rd.get('ncov_data')
@@ -179,7 +199,8 @@ def get_chart_data():
 @app.route('/get_map_data')
 def get_map_data():
     map_data = get_chart_map_data()
-    return jsonify(map_data)
+    city_data = get_chart_city_map_data()
+    return jsonify({'country': map_data, 'city': city_data})
 
 
 if __name__ == '__main__':
